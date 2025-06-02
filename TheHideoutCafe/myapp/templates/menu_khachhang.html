@@ -1,0 +1,196 @@
+{% extends 'base_khach.html' %}
+{% load static %}
+{% block title %}Menu - The Hideout Cafe{% endblock %}
+{% block content %}
+<style>
+  .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .menu-header h1 {
+    color: #5e5e5e;
+    font-size: 24px;
+  }
+  .menu-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .menu-filters select, .menu-filters input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .menu-item {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+  .menu-item:hover {
+    transform: translateY(-5px);
+  }
+  .menu-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  .menu-item .item-name {
+    margin: 10px 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: #5e5e5e;
+  }
+  .menu-item .item-price {
+    color: #009944;
+    font-weight: 600;
+  }
+  .add-to-cart-btn {
+    background: #009944;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  .add-to-cart-btn:hover {
+    background: #007b33;
+  }
+  .cart-icon {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    z-index: 1001;
+  }
+  .cart-icon img {
+    width: 30px;
+    height: 30px;
+  }
+  .cart-icon span {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+  .cart-dropdown {
+    display: none;
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    min-width: 200px;
+    z-index: 1000;
+  }
+  .cart-dropdown.show {
+    display: block;
+  }
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 14px;
+  }
+  @media screen and (max-width: 768px) {
+    .menu-item img { height: 150px; }
+    .menu-header { flex-direction: column; align-items: flex-start; }
+    .cart-icon { top: 10px; right: 10px; }
+    .cart-dropdown { right: 10px; }
+  }
+  @media screen and (max-width: 576px) {
+    .menu-grid { grid-template-columns: 1fr; }
+    .menu-filters { flex-direction: column; width: 100%; }
+    .menu-filters select, .menu-filters input { width: 100%; }
+  }
+</style>
+
+<div class="cart-icon" onclick="toggleCartDropdown()">
+  <img src="{% static 'images/cart-icon.jpg' %}" alt="Giỏ Hàng">
+  <span>{{ tong_mon_gio_hang }}</span>
+</div>
+<div class="cart-dropdown" id="cartDropdown">
+  {% if gio_hang %}
+    {% for item in gio_hang %}
+      <div class="cart-item">
+        <span>{{ item.mon_an.ten_mon }}</span>
+        <span>x{{ item.so_luong }}</span>
+      </div>
+    {% endfor %}
+    <div class="cart-item">
+      <a href="{% url 'myapp:view_cart' %}" style="color: #009944; text-decoration: none;">Xem Giỏ Hàng</a>
+    </div>
+  {% else %}
+    <div class="cart-item">Giỏ hàng trống</div>
+  {% endif %}
+</div>
+<div class="menu-header">
+  <h1>THỰC ĐƠN HÔM NAY</h1>
+  <div class="menu-filters">
+    <input type="text" id="search" placeholder="Tìm kiếm món..." oninput="searchMenu(this.value)">
+  </div>
+</div>
+
+<div class="menu-grid" id="menuGrid">
+  {% for mon in thuc_don %}
+    <div class="menu-item" data-ten="{{ mon.ten_mon|lower }}">
+      <img src="{% if mon.hinh_anh %}{{ mon.hinh_anh.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" alt="{{ mon.ten_mon }}">
+      <div class="item-name">{{ mon.ten_mon }}</div>
+      <div class="item-price">{{ mon.gia_tien|floatformat:0 }}đ</div>
+      <form method="POST" action="{% url 'myapp:add_to_cart' %}">
+        {% csrf_token %}
+        <input type="hidden" name="ma_mon" value="{{ mon.ma_mon }}">
+        <input type="hidden" name="so_luong" value="1">
+        <button type="submit" class="add-to-cart-btn">Thêm Vào Giỏ</button>
+      </form>
+    </div>
+  {% empty %}
+    <p>Chưa có món nào trong thực đơn.</p>
+  {% endfor %}
+</div>
+
+<script>
+  function toggleCartDropdown() {
+    document.getElementById('cartDropdown').classList.toggle('show');
+  }
+  document.addEventListener('click', function(event) {
+    const cartIcon = document.querySelector('.cart-icon');
+    const dropdown = document.getElementById('cartDropdown');
+    if (!cartIcon.contains(event.target) && !dropdown.contains(event.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
+  function searchMenu(query) {
+    const items = document.querySelectorAll('.menu-item');
+    const lowerQuery = query.toLowerCase();
+    items.forEach(item => {
+      const isVisible = item.dataset.ten.includes(lowerQuery);
+      item.style.display = isVisible ? 'block' : 'none';
+    });
+  }
+</script>
+{% endblock %}

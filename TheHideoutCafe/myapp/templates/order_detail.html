@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}The Hideout Cafe - Chi tiết đơn hàng{% endblock %}
+
+{% block extra_css %}
+<style>
+  .modal {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+
+
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .modal-content h2 {
+    color: #009944;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .th {
+    padding: 8px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    background: #f9fafb;
+  }
+  .td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #374151;
+    border-top: 1px solid #e5e7eb;
+  }
+  .btn-gray {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background: #d1d5db;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-gray:hover {
+    background: #b4ffab;
+    color: #000;
+  }
+  .btn-back {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background: #d1d5db;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .btn-back:hover {
+    background: #b4ffab;
+    color: #000;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="modal" id="order-detail-modal">
+  <div class="modal-content">
+    <button class="btn-back" onclick="window.location.href='{% url 'myapp:order_list' %}'">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Quay lại
+    </button>
+    <h2>Chi tiết đơn hàng</h2>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="th">Mã đơn</th>
+            <th class="th">Khách hàng</th>
+            <th class="th">Thanh toán</th>
+            <th class="th">Địa chỉ</th>
+            <th class="th">Sản phẩm</th>
+            <th class="th">Trạng thái</th>
+            <th class="th">Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td">{{ don_hang.ma_don_hang }}</td>
+            <td class="td">{{ don_hang.ten_khach_hang }}</td>
+            <td class="td">{{ don_hang.get_thanh_toan_display }}</td>
+            <td class="td">{% if don_hang.loai_don_hang == 'truc_tuyen' %}{{ don_hang.dia_chi|default:"" }}{% endif %}</td>
+            <td class="td">
+              {% for item in chi_tiet %}
+                {{ item.mon_an.ten_mon }} ({{ item.so_luong }} x {{ item.mon_an.gia_tien|intcomma }}đ)<br>
+              {% empty %}
+                Không có món nào
+              {% endfor %}
+            </td>
+            <td class="td">{{ don_hang.get_trang_thai_display }}</td>
+            <td class="td">{{ don_hang.ngay_tao|date:"d/m/Y H:i A" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex justify-end gap-4 mt-6">
+      <button type="button" class="btn-gray" onclick="window.location.href='{% url 'myapp:order_list' %}'">Đóng</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

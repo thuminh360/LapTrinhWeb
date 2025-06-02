@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}The Hideout Cafe - Quản lý đơn hàng{% endblock %}
+
+{% block extra_css %}
+<style>
+  .trang-thai, .status-select, .payment-select {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+  }
+  .status-select, .payment-select {
+    background: inherit;
+    cursor: pointer;
+    color: inherit;
+  }
+  .status-select:focus, .payment-select:focus {
+    outline: none;
+    border: 1px solid #009944;
+  }
+  .thanh-toan { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .btn {
+    padding: 4px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background: white;
+  }
+  .btn:hover { background: #f3f4f6; }
+  .btn-action {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    border: none;
+    color: white;
+    display: inline-block;
+  }
+  .btn-green { background: #009944; }
+  .btn-gray { background: #d1d5db; color: #374151; }
+  .btn-action:hover { background: #b4ffab; color: #000; }
+  .input, .select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+  }
+  .input:focus, .select:focus { outline: 2px solid #009944; outline-offset: 2px; }
+  .table { width: 100%; border-collapse: collapse; }
+  .th {
+    padding: 8px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    background: #f9fafb;
+  }
+  .td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #374151;
+    border-top: 1px solid #e5e7eb;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .modal-content h2 {
+    color: #009944;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  .menu-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .menu-item input[type="number"] { width: 60px; padding: 4px; }
+  .total-money {
+    font-size: 16px;
+    font-weight: 600;
+    color: #009944;
+    margin-top: 16px;
+  }
+  .message {
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .message-success { background: #d1fae5; color: #065f46; }
+  .message-error { background: #fee2e2; color: #991b1b; }
+  .da-xac-nhan-status, .cho-xac-nhan-status { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+  .dang-che-bien-status, .dang-chuan-bi-status { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+  .dang-giao-status { background: #ede9fe; color: #6b21a8; border: 1px solid #c4b5fd; }
+  .hoan-thanh-status { background: #bfdbfe; color: #1e40af; border: 1px solid #93c5fd; }
+  .da-huy-status, .chua-thanh-toan-status { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+  .da-thanh-toan-status { background: #cffafe; color: #164e63; border: 1px solid #22d3ee; }
+  .da-thanh-toan-dot { background: #22d3ee; }
+  .chua-thanh-toan-dot { background: #f87171; }
+  .order-id { color: #2563eb; text-decoration: underline; }
+  .order-id:hover { color: #1e40af; }
+</style>
+{% endblock %}
+
+{% block messages %}
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'đăng nhập' not in message|lower and 'đăng xuất' not in message|lower %}
+        <div class="message message-{% if message.tags == 'success' %}success{% else %}error{% endif %}" data-auto-dismiss="3000">
+          {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 24px;">
+  <!-- Nút Quay lại -->
+  <div style="margin-bottom: 16px;">
+    <button onclick="history.back()" style="display: flex; align-items: center; color: #4b5563;">
+      <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Quay lại
+    </button>
+  </div>
+
+  <!-- Tiêu đề -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h1 style="font-size: 24px; font-weight: bold; color: #374151;">ĐƠN HÀNG</h1>
+    <button class="btn-action btn-green" onclick="openModal()">Tạo đơn</button>
+  </div>
+  <hr style="border-color: #e5e7eb; margin-bottom: 24px;">
+
+  <!-- Bộ lọc -->
+  <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+    <div style="position: relative; width: 256px;">
+      <input type="text" id="search-input" placeholder="Tìm kiếm mã đơn" class="input">
+      <svg style="position: absolute; right: 12px; top: 10px; width: 16px; height: 16px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
+    <select id="status-filter" class="select" style="width: 192px;">
+      <option value="">Tất cả trạng thái</option>
+      {% for value, label in trang_thai_choices %}
+        <option value="{{ label }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Bảng đơn hàng -->
+  <div style="overflow-x: auto;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="th">Mã đơn</th>
+          <th class="th">Khách hàng</th>
+          <th class="th">Loại đơn</th>
+          <th class="th">Trạng thái</th>
+          <th class="th">Tổng tiền</th>
+          <th class="th">Thanh toán</th>
+          <th class="th">Địa chỉ</th>
+          <th class="th">Ngày tạo</th>
+        </tr>
+      </thead>
+      <tbody id="order-table">
+        {% for don_hang in don_hang_list %}
+          <tr>
+            <td class="td"><a href="{% url 'myapp:order_detail' ma_don_hang=don_hang.ma_don_hang %}" class="order-id">{{ don_hang.ma_don_hang }}</a></td>
+            <td class="td">{{ don_hang.ten_khach_hang }}</td>
+            <td class="td">{{ don_hang.get_loai_don_hang_display }}</td>
+            <td class="td">
+              <form method="POST" action="{% url 'myapp:update_order_status' %}">
+                {% csrf_token %}
+                <input type="hidden" name="ma_don_hang" value="{{ don_hang.ma_don_hang }}">
+                <select name="trang_thai" class="status-select {{ don_hang.trang_thai|slugify }}-status" onchange="this.form.submit()">
+                  {% for value, label in trang_thai_choices %}
+                    <option value="{{ value }}" {% if value == don_hang.trang_thai %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td class="td">{{ don_hang.tong_tien|default:0|intcomma }}đ</td>
+            <td class="td">
+              <form method="POST" action="{% url 'myapp:update_payment_status' %}">
+                {% csrf_token %}
+                <input type="hidden" name="ma_don_hang" value="{{ don_hang.ma_don_hang }}">
+                <select name="thanh_toan" class="payment-select {{ don_hang.thanh_toan|slugify }}-status" onchange="this.form.submit()">
+                  {% for value, label in thanh_toan_choices %}
+                    <option value="{{ value }}" {% if value == don_hang.thanh_toan %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td class="td">{{ don_hang.dia_chi|default:"" }}</td>
+            <td class="td">{{ don_hang.ngay_tao|date:"d/m/Y H:i" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td class="td" colspan="8">Không có đơn hàng.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Thông tin kết quả -->
+  <div style="margin-top: 24px; font-size: 14px; color: #6b7280;">
+    Hiển thị <span id="result-count">{{ don_hang_list|length }}</span> trong <span id="total-count">{{ don_hang_list|length }}</span> kết quả
+  </div>
+
+  <!-- Modal tạo đơn -->
+  <div class="modal" id="create-order-modal">
+    <div class="modal-content">
+      <h2>Tạo đơn hàng</h2>
+      <form id="create-order-form" method="POST" action="{% url 'myapp:create_order' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="customer">Khách hàng</label>
+          <input type="text" id="customer" name="ten_khach_hang" class="input" required>
+        </div>
+        <div class="form-group">
+          <label for="order-type">Loại đơn</label>
+          <select id="order-type" name="loai_don_hang" class="select">
+            {% for value, label in loai_don_hang_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="status">Trạng thái</label>
+          <select id="status" name="trang_thai" class="select">
+            {% for value, label in trang_thai_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="payment">Thanh toán</label>
+          <select id="payment" name="thanh_toan" class="select">
+            {% for value, label in thanh_toan_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="address">Địa chỉ</label>
+          <input type="text" id="address" name="dia_chi" class="input" placeholder="Chỉ nhập cho đơn Trực tuyến">
+        </div>
+        <div class="form-group">
+          <label for="create-date">Ngày tạo</label>
+          <input type="datetime-local" id="create-date" name="ngay_tao" class="input" value="{{ today|date:'Y-m-d\TH:i' }}">
+        </div>
+        <div class="form-group">
+          <label>Món ăn</label>
+          {% for mon in thuc_don %}
+            <div class="menu-item">
+              <input type="checkbox" class="menu-checkbox" name="mon_an_{{ mon.ma_mon }}" data-price="{{ mon.gia_tien }}">
+              <span>{{ mon.ten_mon }}</span>
+              <input type="number" class="quantity" name="so_luong_{{ mon.ma_mon }}" min="0" value="0">
+            </div>
+          {% endfor %}
+        </div>
+        <div class="total-money" id="total-money">Tổng tiền: 0đ</div>
+        <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px;">
+          <button type="button" class="btn-action btn-gray" onclick="closeModal()">Hủy</button>
+          <button type="submit" class="btn-action btn-green">Tạo đơn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function openModal() {
+    document.getElementById('create-order-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('create-order-modal').style.display = 'none';
+    resetForm();
+  }
+
+  function resetForm() {
+    const form = document.getElementById('create-order-form');
+    form.querySelector('#customer').value = '';
+    form.querySelector('#order-type').value = 'truc_tuyen';
+    form.querySelector('#status').value = 'da_xac_nhan';
+    form.querySelector('#payment').value = 'da_thanh_toan';
+    form.querySelector('#address').value = '';
+    form.querySelector('#create-date').value = '{{ today|date:"Y-m-d\TH:i" }}';
+    form.querySelectorAll('.menu-checkbox, .quantity').forEach(el => {
+      el.checked = false;
+      el.value = '0';
+    });
+    updateTotalMoney();
+  }
+
+  function updateTotalMoney() {
+    let total = 0;
+    document.querySelectorAll('.menu-item').forEach(item => {
+      const checkbox = item.querySelector('.menu-checkbox');
+      const quantity = parseInt(item.querySelector('.quantity').value) || 0;
+      if (checkbox.checked && quantity > 0) {
+        total += parseInt(checkbox.dataset.price) * quantity;
+      }
+    });
+    document.getElementById('total-money').textContent = `Tổng tiền: ${total.toLocaleString()}đ`;
+  }
+
+  document.querySelectorAll('.menu-checkbox, .quantity').forEach(el => {
+    el.addEventListener('change', updateTotalMoney);
+  });
+
+  function filterOrders() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const status = document.getElementById('status-filter').value;
+    const rows = document.querySelectorAll('#order-table tr');
+    let visible = 0;
+
+    rows.forEach(row => {
+      const id = row.cells[0].textContent.toLowerCase();
+      const statusText = row.cells[3].querySelector('.status-select').selectedOptions[0].textContent;
+      const show = id.includes(search) && (!status || statusText === status);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('result-count').textContent = visible;
+    document.getElementById('total-count').textContent = rows.length;
+  }
+
+  document.getElementById('search-input').addEventListener('input', filterOrders);
+  document.getElementById('status-filter').addEventListener('change', filterOrders);
+  filterOrders();
+</script>
+{% endblock %}

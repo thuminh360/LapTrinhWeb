@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}The Hideout Cafe - Quản lý đặt bàn{% endblock %}
+
+  {% block extra_css %}
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .filter-section {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filter-section input {
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 200px;
+    }
+    .filter-section button, .btn-add {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #fff;
+      background: #009944;
+      border: none;
+      cursor: pointer;
+    }
+    .filter-section button:hover, .btn-add:hover {
+      background: #007a33;
+    }
+    .btn-cancel {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #fff;
+      background: #dc2626;
+      border: none;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .btn-cancel:hover {
+      background: #b91c1c;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .table-item {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    .table-item h3 {
+      color: #374151;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .table-item .status {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .table-item .status.da_dat {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .table-item .status.chua_dat {
+      background: #e5e7eb;
+      color: #4b5563;
+    }
+    .table-item p {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 4px 0;
+    }
+    .form-modal, .detail-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .form-modal.active, .detail-modal.active {
+      display: flex;
+    }
+    .form-content, .detail-content {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      width: 90%;
+      max-width: 600px;
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .form-content h2, .detail-content h2 {
+      color: #009944;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .form-content label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .form-content input, .form-content select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .form-content .error {
+      color: #dc2626;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+    .form-content .error.active {
+      display: block;
+    }
+    .detail-content .booking-item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 0;
+    }
+    .detail-content .booking-item:last-child {
+      border-bottom: none;
+    }
+    .detail-content p {
+      font-size: 14px;
+      color: #374151;
+      margin: 4px 0;
+    }
+    .detail-content select {
+      padding: 6px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .btn-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-gray {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #374151;
+      background: #d1d5db;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-gray:hover {
+      background: #b4ffab;
+      color: #000;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .filter-section input {
+        width: 100%;
+      }
+    }
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .form-content, .detail-content {
+        width: 95%;
+        padding: 16px;
+      }
+    }
+  </style>
+  {% endblock %}
+
+  {% block extra_js %}
+  <script>
+    function openAddForm() {
+      document.getElementById('add-booking-form').classList.add('active');
+      document.getElementById('ten_khach_hang').value = '';
+      document.getElementById('so_dien_thoai_khach_hang').value = '';
+      document.getElementById('ban_an').value = '';
+      document.getElementById('thoi_gian_dat').value = '';
+      document.getElementById('so_nguoi').value = '';
+      document.getElementById('trang_thai').value = 'cho_xac_nhan';
+    }
+    function openDetailModal(bookings) {
+      const container = document.getElementById('booking-details');
+      container.innerHTML = '';
+      bookings.forEach(booking => {
+        const div = document.createElement('div');
+        div.className = 'booking-item';
+        div.innerHTML = `
+          <p><strong>Tên khách hàng:</strong> ${booking.ten_khach_hang || 'Không có'}</p>
+          <p><strong>Số điện thoại:</strong> ${booking.so_dien_thoai_khach_hang || 'Không có'}</p>
+          <p><strong>Thời gian đặt:</strong> ${booking.thoi_gian_dat}</p>
+          <p><strong>Số người:</strong> ${booking.so_nguoi}</p>
+          <p><strong>Trạng thái:</strong> ${booking.trang_thai_display}</p>
+          <form method="POST" action="{% url 'myapp:update_booking_status' %}">
+            {% csrf_token %}
+            <input type="hidden" name="ma_dat_ban" value="${booking.ma_dat_ban}">
+            <select name="trang_thai" onchange="this.form.submit()">
+              <option value="cho_xac_nhan" ${booking.trang_thai === 'cho_xac_nhan' ? 'selected' : ''}>Chờ Xác Nhận</option>
+              <option value="da_xac_nhan" ${booking.trang_thai === 'da_xac_nhan' ? 'selected' : ''}>Đã Xác Nhận</option>
+              <option value="da_huy" ${booking.trang_thai === 'da_huy' ? 'selected' : ''}>Đã Hủy</option>
+            </select>
+          </form>
+          <form method="POST" action="{% url 'myapp:cancel_booking' %}" onsubmit="return confirm('Bạn có chắc muốn hủy đặt bàn này?')">
+            {% csrf_token %}
+            <input type="hidden" name="ma_dat_ban" value="${booking.ma_dat_ban}">
+            <button type="submit" class="btn-cancel">Hủy</button>
+          </form>
+        `;
+        container.appendChild(div);
+      });
+      document.getElementById('booking-detail-modal').classList.add('active');
+    }
+    function closeForm() {
+      document.getElementById('add-booking-form').classList.remove('active');
+    }
+    function closeDetailModal() {
+      document.getElementById('booking-detail-modal').classList.remove('active');
+    }
+    function validateForm() {
+      let isValid = true;
+      const tenKhachHang = document.getElementById('ten_khach_hang');
+      const banAn = document.getElementById('ban_an');
+      const thoiGianDat = document.getElementById('thoi_gian_dat');
+      const soNguoi = document.getElementById('so_nguoi');
+      const tenKhachHangError = document.getElementById('ten-khach-hang-error');
+      const banAnError = document.getElementById('ban-an-error');
+      const thoiGianDatError = document.getElementById('thoi-gian-dat-error');
+      const soNguoiError = document.getElementById('so-nguoi-error');
+
+      tenKhachHangError.classList.remove('active');
+      banAnError.classList.remove('active');
+      thoiGianDatError.classList.remove('active');
+      soNguoiError.classList.remove('active');
+
+      if (!tenKhachHang.value.trim()) {
+        tenKhachHangError.textContent = 'Vui lòng nhập tên khách hàng.';
+        tenKhachHangError.classList.add('active');
+        isValid = false;
+      }
+      if (!banAn.value) {
+        banAnError.textContent = 'Vui lòng chọn bàn.';
+        banAnError.classList.add('active');
+        isValid = false;
+      }
+      if (!thoiGianDat.value) {
+        thoiGianDatError.textContent = 'Vui lòng chọn thời gian đặt.';
+        thoiGianDatError.classList.add('active');
+        isValid = false;
+      }
+      if (!soNguoi.value || soNguoi.value <= 0) {
+        soNguoiError.textContent = 'Số người phải lớn hơn 0.';
+        soNguoiError.classList.add('active');
+        isValid = false;
+      }
+      return isValid;
+    }
+  </script>
+  {% endblock %}
+
+  {% block content %}
+  <div class="container">
+    <div class="header-section">
+      <h1 class="text-2xl font-semibold text-gray-900">Quản lý đặt bàn</h1>
+      <button class="btn-add" onclick="openAddForm()">Đặt Bàn</button>
+    </div>
+
+    <!-- Bộ lọc -->
+    <form method="GET" class="filter-section">
+      <input type="date" name="ngay_dat" value="{{ ngay_dat|date:'Y-m-d' }}">
+      <button type="submit">Lọc</button>
+    </form>
+
+    <!-- Grid view -->
+    <div class="grid">
+      {% for ban in ban_an_list %}
+        <div class="table-item" {% if ban.bookings %} onclick='openDetailModal([
+          {% for booking in ban.bookings %}
+            {
+              ma_dat_ban: "{{ booking.ma_dat_ban }}",
+              ten_khach_hang: "{{ booking.ten_khach_hang|default:'Không có'|escapejs }}",
+              so_dien_thoai_khach_hang: "{{ booking.so_dien_thoai_khach_hang|default:'Không có'|escapejs }}",
+              thoi_gian_dat: "{{ booking.thoi_gian_dat|date:'d/m/Y H:i'|escapejs }}",
+              so_nguoi: "{{ booking.so_nguoi }}",
+              trang_thai: "{{ booking.trang_thai }}",
+              trang_thai_display: "{{ booking.get_trang_thai_display|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ])'{% endif %}>
+          <h3>{{ ban.so_ban }}</h3>
+          <span class="status {% if ban.bookings %}da_dat{% else %}chua_dat{% endif %}">
+            {% if ban.bookings %}Đã đặt{% else %}Chưa đặt{% endif %}
+          </span>
+          <p><strong>Sức chứa:</strong> {{ ban.suc_chua }} người</p>
+        </div>
+      {% empty %}
+        <p>Chưa có bàn nào.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Modal Form Đặt Bàn -->
+  <div class="form-modal" id="add-booking-form">
+    <div class="form-content">
+      <button class="btn-close" onclick="closeForm()">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2>Đặt Bàn</h2>
+      <form method="POST" action="{% url 'myapp:create_booking' %}" onsubmit="return validateForm()">
+        {% csrf_token %}
+        <label for="ten_khach_hang">Tên khách hàng</label>
+        <input type="text" name="ten_khach_hang" id="ten_khach_hang" placeholder="VD: Nguyễn Văn A" required>
+        <div class="error" id="ten-khach-hang-error"></div>
+        <label for="so_dien_thoai_khach_hang">Số điện thoại</label>
+        <input type="text" name="so_dien_thoai_khach_hang" id="so_dien_thoai_khach_hang" placeholder="VD: 0123456789">
+        <div class="error" id="so-dien-thoai-error"></div>
+        <label for="ban_an">Số bàn</label>
+        <select name="ban_an" id="ban_an" required>
+          <option value="">Chọn bàn</option>
+          {% for ban in ban_an_list %}
+            <option value="{{ ban.ma_ban }}">{{ ban.so_ban }}</option>
+          {% endfor %}
+        </select>
+        <div class="error" id="ban-an-error"></div>
+        <label for="thoi_gian_dat">Thời gian đặt</label>
+        <input type="datetime-local" name="thoi_gian_dat" id="thoi_gian_dat" required>
+        <div class="error" id="thoi-gian-dat-error"></div>
+        <label for="so_nguoi">Số người</label>
+        <input type="number" name="so_nguoi" id="so_nguoi" min="1" placeholder="VD: 4" required>
+        <div class="error" id="so-nguoi-error"></div>
+        <label for="trang_thai">Trạng thái</label>
+        <select name="trang_thai" id="trang_thai">
+          <option value="cho_xac_nhan">Chờ Xác Nhận</option>
+          <option value="da_xac_nhan">Đã Xác Nhận</option>
+          <option value="da_huy">Đã Hủy</option>
+        </select>
+        <div class="flex justify-end gap-4 mt-4">
+          <button type="button" class="btn-gray" onclick="closeForm()">Hủy</button>
+          <button type="submit" class="btn-add">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Chi tiết Đặt Bàn -->
+  <div class="detail-modal" id="booking-detail-modal">
+    <div class="detail-content">
+      <button class="btn-close" onclick="closeDetailModal()">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2>Chi tiết Đặt Bàn</h2>
+      <div id="booking-details"></div>
+      <div class="flex justify-end mt-4">
+        <button type="button" class="btn-gray" onclick="closeDetailModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+  {% endblock %}

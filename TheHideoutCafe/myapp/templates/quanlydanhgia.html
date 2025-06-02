@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}The Hideout Cafe - Quản lý đánh giá{% endblock %}
+
+{% block extra_css %}
+<style>
+  .btn {
+    padding: 4px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background: white;
+  }
+  .btn:hover { background: #f3f4f6; }
+  .btn-action {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    border: none;
+    text-align: center;
+    display: inline-block;
+  }
+  .btn-green { background: #009944; color: white; }
+  .btn-gray { background: #d1d5db; color: #374151; }
+  .btn-action:hover { background: #b4ffab; color: #000; }
+  .textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+  }
+  .textarea:focus { outline: 2px solid #009944; outline-offset: 2px; }
+  .table { width: 100%; border-collapse: collapse; }
+  .th {
+    padding: 8px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    background: #f9fafb;
+  }
+  .td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #374151;
+    border-top: 1px solid #e5e7eb;
+  }
+  .message {
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .message-success { background: #d1fae5; color: #065f46; }
+  .message-error { background: #fee2e2; color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 24px;">
+  <h1 style="font-size: 24px; font-weight: bold; color: #374151; margin-bottom: 16px;">QUẢN LÝ ĐÁNH GIÁ</h1>
+  <hr style="border-color: #e5e7eb; margin-bottom: 24px;">
+
+  <!-- Thông báo -->
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'đăng nhập' not in message|lower and 'đăng xuất' not in message|lower %}
+        <div class="message message-{% if message.tags == 'success' %}success{% else %}error{% endif %}" data-auto-dismiss="3000">
+          {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <!-- Bảng đánh giá -->
+  <div style="overflow-x: auto;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="th">Mã đơn</th>
+          <th class="th">Điểm</th>
+          <th class="th">Bình luận</th>
+          <th class="th">Phản hồi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for danh_gia in dsdanh_gia %}
+          <tr>
+            <td class="td">{{ danh_gia.don_hang.ma_don_hang }}</td>
+            <td class="td">{{ danh_gia.diem_danh_gia }}</td>
+            <td class="td">{{ danh_gia.binh_luan|default:"" }}</td>
+            <td class="td">
+              {% if danh_gia.phan_hoi and edit_id != danh_gia.ma_danh_gia|stringformat:"s" %}
+                {{ danh_gia.phan_hoi }}
+                <a href="?edit_id={{ danh_gia.ma_danh_gia }}" class="btn-action btn-gray" style="margin-top: 8px;">Sửa</a>
+              {% else %}
+                <form method="POST">
+                  {% csrf_token %}
+                  <input type="hidden" name="ma_danh_gia" value="{{ danh_gia.ma_danh_gia }}">
+                  <textarea name="phan_hoi" class="textarea" rows="2" placeholder="Nhập phản hồi">{{ danh_gia.phan_hoi|default:"" }}</textarea>
+                  <button type="submit" class="btn-action btn-green" style="margin-top: 8px;">Lưu</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td class="td" colspan="4">Chưa có đánh giá.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

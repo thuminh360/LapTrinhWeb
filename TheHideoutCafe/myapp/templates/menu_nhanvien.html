@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Quản lý Menu - Nhân viên{% endblock %}
+
+{% block content %}
+  <div class="menu-header">
+    <h1>QUẢN LÝ MENU</h1>
+  </div>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="message {% if message.tags == 'success' %}message-success{% elif message.tags == 'error' %}message-error{% endif %}" data-auto-dismiss="3000">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+  <div class="menu-grid">
+    {% for mon in thuc_don %}
+      <div class="menu-item {% if mon.da_an %}hidden-item{% endif %}" data-id="{{ mon.ma_mon }}">
+        <img src="{{ mon.hinh_anh.url|default:'/static/images/default.jpg' }}" alt="{{ mon.ten_mon }}">
+        <div class="item-name">{{ mon.ten_mon }}<br>{{ mon.gia_tien }}đ</div>
+        <div class="actions">
+          <div class="edit-btn" onclick="showEditForm('{{ mon.ten_mon }}', '{{ mon.gia_tien }}', {{ mon.ma_mon }})">Sửa</div>
+          <div class="hide-btn" onclick="showConfirmDialog({{ mon.ma_mon }}, {{ mon.da_an|yesno:'true,false' }})">
+            {% if mon.da_an %}Hiện lại{% else %}Ẩn{% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>Chưa có món nào trong thực đơn.</p>
+    {% endfor %}
+  </div>
+
+
+
+  <!-- Confirm Hide/Unhide Dialog -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-dialog">
+      <h3 id="confirm-title">Xác nhận</h3>
+      <p id="confirm-message"></p>
+      <div class="confirm-buttons">
+        <button class="cancel-btn" onclick="hideConfirmDialog()">Hủy</button>
+        <form id="toggle-visibility-form" method="POST" action="{% url 'myapp:toggle_menu_item_visibility_nhanvien' %}">
+          {% csrf_token %}
+          <input type="hidden" name="ma_mon" id="toggle-id">
+          <input type="hidden" name="da_an" id="toggle-value">
+          <button type="submit" class="confirm-btn">Xác nhận</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function showEditForm(name, price, id) {
+      document.getElementById("edit-name").value = name;
+      document.getElementById("edit-price").value = price;
+      document.getElementById("edit-id").value = id;
+      document.getElementById("edit-overlay").style.display = "flex";
+    }
+
+    function hideEditForm() {
+      document.getElementById("edit-overlay").style.display = "none";
+      document.getElementById("edit-form").reset();
+    }
+
+    function showConfirmDialog(id, isHidden) {
+      document.getElementById("toggle-id").value = id;
+      document.getElementById("toggle-value").value = isHidden ? "false" : "true";
+      document.getElementById("confirm-title").textContent = isHidden ? "Xác nhận hiện món" : "Xác nhận ẩn món";
+      document.getElementById("confirm-message").textContent = isHidden ?
+        "Bạn có chắc chắn muốn hiện lại món này không?" :
+        "Bạn có chắc chắn muốn ẩn món này không?";
+      document.getElementById("confirm-overlay").style.display = "flex";
+    }
+
+    function hideConfirmDialog() {
+      document.getElementById("confirm-overlay").style.display = "none";
+    }
+  </script>
+{% endblock %}

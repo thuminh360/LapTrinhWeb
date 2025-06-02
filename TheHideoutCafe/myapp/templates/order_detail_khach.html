@@ -1,0 +1,213 @@
+{% extends 'base_khach.html' %}
+{% load static cart_tags %}
+
+{% block title %}Chi Tiết Đơn Hàng - The Hideout Cafe{% endblock %}
+
+{% block content %}
+<style>
+  .order-info {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+  .order-info p {
+    margin: 5px 0;
+    font-size: 16px;
+  }
+  .order-info p strong {
+    color: #555;
+  }
+  .order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .order-table th, .order-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .order-table th {
+    background: #f8f8f8;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .order-table td {
+    vertical-align: middle;
+  }
+  .order-table img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  .order-table .item-details {
+    padding-left: 15px;
+  }
+  .order-table .item-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+  }
+  .order-table .item-price {
+    font-size: 14px;
+    color: #777;
+  }
+  .order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-top: 1px solid #e0e0e0;
+  }
+  .order-total {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+  }
+  .order-total span {
+    color: #009944;
+  }
+  .action-buttons {
+    display: flex;
+    gap: 15px;
+  }
+  .action-buttons a, .action-buttons button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.3s, transform 0.1s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .back-btn {
+    background: #e0e0e0;
+    color: #333;
+  }
+  .back-btn:hover {
+    background: #d0d0d0;
+    transform: translateY(-2px);
+  }
+  .reorder-btn {
+    background: #009944;
+    color: white;
+  }
+  .reorder-btn:hover {
+    background: #007b33;
+    transform: translateY(-2px);
+  }
+  .cancel-btn {
+    background: #ff4444;
+    color: white;
+  }
+  .cancel-btn:hover {
+    background: #cc0000;
+    transform: translateY(-2px);
+  }
+  @media screen and (max-width: 768px) {
+    .order-table th, .order-table td {
+      padding: 10px;
+    }
+    .order-table img {
+      width: 50px;
+      height: 50px;
+    }
+    .order-table .item-name {
+      font-size: 14px;
+    }
+    .order-table .item-price {
+      font-size: 12px;
+    }
+    .order-footer {
+      flex-direction: column;
+      gap: 15px;
+    }
+    .action-buttons {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .action-buttons a, .action-buttons button {
+      width: 48%;
+      padding: 10px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<h1>Chi Tiết Đơn Hàng #{{ don_hang.ma_don_hang }}</h1>
+<div class="order-info">
+  <p><strong>Loại Đơn Hàng:</strong> {{ don_hang.get_loai_don_hang_display }}</p>
+  <p><strong>Trạng Thái:</strong> {{ don_hang.get_trang_thai_display }}</p>
+  <p><strong>Thanh Toán:</strong> {{ don_hang.get_thanh_toan_display }}</p>
+  {% if don_hang.dia_chi %}
+    <p><strong>Địa Chỉ Giao Hàng:</strong> {{ don_hang.dia_chi }}</p>
+  {% endif %}
+  {% if don_hang.loai_don_hang == 'truc_tuyen' or don_hang.loai_don_hang == 'mang_di' %}
+    <p><strong>Số Điện Thoại:</strong> {{ don_hang.so_dien_thoai }}</p>
+  {% endif %}
+  {% if don_hang.thoi_gian_dat %}
+    <p><strong>Thời Gian Đặt:</strong> {{ don_hang.thoi_gian_dat }}</p>
+  {% endif %}
+  <p><strong>Ngày Tạo:</strong> {{ don_hang.ngay_tao }}</p>
+</div>
+<table class="order-table">
+  <thead>
+    <tr>
+      <th>Hình Ảnh</th>
+      <th>Thông Tin</th>
+      <th>Số Lượng</th>
+      <th>Giá Tiền</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for chi_tiet in chi_tiet_don_hang %}
+      <tr>
+        <td>
+          <img src="{% if chi_tiet.mon_an.hinh_anh %}{{ chi_tiet.mon_an.hinh_anh.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" alt="{{ chi_tiet.mon_an.ten_mon }}">
+        </td>
+        <td>
+          <div class="item-details">
+            <div class="item-name">{{ chi_tiet.mon_an.ten_mon }}</div>
+          </div>
+        </td>
+        <td>{{ chi_tiet.so_luong }}</td>
+        <td>{{ chi_tiet.gia_tien|multiply:chi_tiet.so_luong|floatformat:0 }}đ</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="order-footer">
+  <div class="order-total">Tổng Tiền: <span>{{ don_hang.tong_tien|floatformat:0 }}đ</span></div>
+  <div class="action-buttons">
+    <a href="{% url 'myapp:order_history' %}" class="back-btn">Quay Lại Lịch Sử Đơn Hàng</a>
+    {% if don_hang.trang_thai != 'da_xac_nhan' %}
+      <a href="{% url 'myapp:reorder' don_hang.ma_don_hang %}" class="reorder-btn">Đặt Lại Đơn Hàng</a>
+    {% endif %}
+    {% if don_hang.trang_thai == 'da_xac_nhan' %}
+      <form id="cancel-form-{{ don_hang.ma_don_hang }}" method="post" action="{% url 'myapp:cancel_order' don_hang.ma_don_hang %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="button" class="cancel-btn" onclick="confirmCancel({{ don_hang.ma_don_hang }})">Hủy Đơn Hàng</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function confirmCancel(orderId) {
+    if (confirm("Bạn có muốn hủy đơn hàng không?")) {
+      document.getElementById('cancel-form-' + orderId).submit();
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}The Hideout Cafe{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    a {
+      text-decoration: none;
+    }
+    body {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      background: #f7f7f7;
+    }
+    .sidebar {
+      width: 280px;
+      background: #009944;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transition: transform 0.3s ease;
+      z-index: 40;
+    }
+    .sidebar-hidden {
+      transform: translateX(-100%);
+    }
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .logo img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .logo-name {
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-grow: 1;
+    }
+    .nav-item, .nav-item_active {
+      background: #d9d9d9;
+      padding: 10px;
+      border-radius: 20px;
+      text-align: center;
+      color: #383838;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .nav-item_active {
+      background: #b4ffab;
+      color: #383838;
+    }
+    .nav-item:hover {
+      background: #b4ffab;
+      color: #000;
+    }
+    .nav-item.logout {
+      margin-top: auto;
+      font-weight: 700;
+      background: #d9d9d9;
+      color: #dc2626;
+    }
+    .nav-item.logout:hover {
+      background: #b4ffab;
+      color: #b91c1c;
+    }
+    .main-content {
+      flex: 1;
+      padding: 24px;
+      margin-left: 280px;
+      width: 100%;
+      max-width: 1280px;
+      transition: margin-left 0.3s ease;
+      overflow-y: auto;
+    }
+    .main-full {
+      margin-left: 0;
+    }
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 50;
+      background: #009944;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .message {
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+    .message-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .message-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .message.hidden {
+      opacity: 0;
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 10px;
+      }
+      .hamburger {
+        display: block;
+      }
+    }
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+  <button class="hamburger" onclick="toggleSidebar()">
+    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <img src="{% static 'images/logo-removebg-preview.png' %}" alt="Logo" />
+      <div class="logo-name">THE HIDEOUT CAFE</div>
+    </div>
+    <div class="nav-menu">
+      <a href="{% url 'myapp:menu_management' %}" class="nav-item {% if request.resolver_match.url_name == 'menu_management' %}nav-item_active{% endif %}">Menu</a>
+      <a href="{% url 'myapp:order_list' %}" class="nav-item {% if request.resolver_match.url_name == 'order_list' %}nav-item_active{% endif %}">Quản lý đơn hàng</a>
+      <a href="{% url 'myapp:table_management' %}" class="nav-item {% if request.resolver_match.url_name == 'table_management' %}nav-item_active{% endif %}">Quản lý bàn</a>
+      <a href="{% url 'myapp:booking_management' %}" class="nav-item {% if request.resolver_match.url_name == 'booking_management' %}nav-item_active{% endif %}">Quản lý đặt bàn</a>
+      <a href="{% url 'myapp:revenue_management' %}" class="nav-item {% if request.resolver_match.url_name == 'revenue_management' %}nav-item_active{% endif %}">Quản lý doanh thu</a>
+      <a href="{% url 'myapp:message' %}" class="nav-item {% if request.resolver_match.url_name == 'message' %}nav-item_active{% endif %}">Tin nhắn</a>
+      <a href="{% url 'myapp:manage_reviews' %}" class="nav-item {% if request.resolver_match.url_name == 'manage_reviews' %}nav-item_active{% endif %}">Đánh giá</a>
+      <a href="{% url 'myapp:logout' %}"  class="nav-item logout {% if request.resolver_match.url_name == 'logout_view' %}nav-item_active{% endif %}">Đăng xuất</a>
+
+
+    </div>
+  </div>
+
+  <div class="main-content" id="main-content">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const main = document.getElementById('main-content');
+      sidebar.classList.toggle('sidebar-hidden');
+      sidebar.classList.toggle('active');
+      main.classList.toggle('main-full');
+    }
+    document.querySelectorAll('[data-auto-dismiss]').forEach(el => {
+      setTimeout(() => {
+        el.classList.add('hidden');
+      }, parseInt(el.dataset.autoDismiss));
+    });
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

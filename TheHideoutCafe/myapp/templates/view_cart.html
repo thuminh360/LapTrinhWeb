@@ -1,0 +1,657 @@
+{% load static cart_tags %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giỏ Hàng - The Hideout Cafe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    body {
+      background: #f5f5f5;
+      color: #333;
+    }
+    .main-content {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #009944;
+      font-size: 28px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    .cart-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .cart-table th, .cart-table td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .cart-table th {
+      background: #f8f8f8;
+      color: #555;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+    .cart-table td {
+      vertical-align: middle;
+    }
+    .cart-table img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .cart-table .item-details {
+      padding-left: 15px;
+    }
+    .cart-table .item-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+    }
+    .cart-table .item-price {
+      font-size: 14px;
+      color: #777;
+    }
+    .cart-table .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cart-table .quantity-btn {
+      background: #009944;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .cart-table .quantity-btn:hover {
+      background: #007b33;
+    }
+    .cart-table .quantity {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .cart-table input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .cart-table tr:hover {
+      background: #f9f9f9;
+      transition: background 0.2s;
+    }
+    .cart-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-top: 1px solid #e0e0e0;
+    }
+    .cart-total {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+    .cart-total span {
+      color: #009944;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+    }
+    .checkout-btn, .back-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.1s;
+    }
+    .checkout-btn {
+      background: #009944;
+      color: white;
+    }
+    .checkout-btn:hover {
+      background: #007b33;
+      transform: translateY(-2px);
+    }
+    .back-btn {
+      background: #e0e0e0;
+      color: #333;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .back-btn:hover {
+      background: #d0d0d0;
+      transform: translateY(-2px);
+    }
+    .empty-cart {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+      margin: 50px 0;
+    }
+    .order-form {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .order-form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+    .order-form input[type="text"],
+    .order-form input[type="datetime-local"],
+    .order-form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .order-form select {
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-content h2 {
+      text-align: center;
+      color: #009944;
+      margin-bottom: 20px;
+    }
+    .modal-content p {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .modal-content .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .modal-content .modal-footer button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .modal-content .modal-footer .confirm-btn {
+      background: #009944;
+      color: white;
+    }
+    .modal-content .modal-footer .confirm-btn:hover {
+      background: #007b33;
+    }
+    .modal-content .modal-footer .cancel-btn {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .modal-content .modal-footer .cancel-btn:hover {
+      background: #d0d0d0;
+    }
+    .success-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      justify-content: center;
+      align-items: center;
+    }
+    .success-modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .success-modal-content h2 {
+      color: #009944;
+      margin-bottom: 20px;
+    }
+    .success-modal-content p {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .success-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      background: #009944;
+      color: white;
+    }
+    .success-modal-content button:hover {
+      background: #007b33;
+    }
+    @media screen and (max-width: 768px) {
+      .main-content {
+        margin: 15px;
+        padding: 15px;
+      }
+      .cart-table th, .cart-table td {
+        padding: 10px;
+      }
+      .cart-table img {
+        width: 50px;
+        height: 50px;
+      }
+      .cart-table .item-name {
+        font-size: 14px;
+      }
+      .cart-table .item-price {
+        font-size: 12px;
+      }
+      .cart-table .quantity-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      .cart-footer {
+        flex-direction: column;
+        gap: 15px;
+      }
+      .action-buttons {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .checkout-btn, .back-btn {
+        width: 48%;
+        padding: 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-content">
+    <h1>Giỏ Hàng</h1>
+    {% if gio_hang %}
+      <form id="cart-form" method="POST" action="{% url 'myapp:place_order_mon' %}" onsubmit="return false;">
+        {% csrf_token %}
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Chọn</th>
+              <th>Hình Ảnh</th>
+              <th>Thông Tin</th>
+              <th>Số Lượng</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in gio_hang %}
+              <tr class="cart-item" data-ma-mon="{{ item.mon_an.ma_mon }}" data-price="{{ item.mon_an.gia_tien|floatformat:0 }}">
+                <td>
+                  <input type="checkbox" name="selected_items" value="{{ item.mon_an.ma_mon }}" onchange="updateTotalPrice()">
+                </td>
+                <td>
+                  <img src="{% if item.mon_an.hinh_anh %}{{ item.mon_an.hinh_anh.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" alt="{{ item.mon_an.ten_mon }}">
+                </td>
+                <td>
+                  <div class="item-details">
+                    <div class="item-name">{{ item.mon_an.ten_mon }}</div>
+                    <div class="item-price">{{ item.mon_an.gia_tien|floatformat:0 }}đ x {{ item.so_luong }} = {{ item.mon_an.gia_tien|multiply:item.so_luong|floatformat:0 }}đ</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="quantity-controls">
+                    <button type="button" class="quantity-btn" onclick="updateQuantity('{{ item.mon_an.ma_mon }}', 'decrease')">-</button>
+                    <span class="quantity">{{ item.so_luong }}</span>
+                    <button type="button" class="quantity-btn" onclick="updateQuantity('{{ item.mon_an.ma_mon }}', 'increase')">+</button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="cart-footer">
+          <div class="cart-total">Tổng Tiền: <span>{{ tong_tien|floatformat:0 }}đ</span></div>
+          <div class="action-buttons">
+            <button type="button" class="checkout-btn" onclick="showConfirmModal()">Đặt Hàng</button>
+            <a href="{% url 'myapp:menu_khachhang' %}" class="back-btn">Quay Lại Menu</a>
+          </div>
+        </div>
+        <div class="order-form">
+          <label for="loai_don_hang">Loại Đơn Hàng:</label>
+          <select name="loai_don_hang" id="loai_don_hang" onchange="toggleOrderFields()">
+            <option value="truc_tuyen">Trực Tuyến</option>
+            <option value="tai_quan">Tại Quán</option>
+            <option value="mang_di">Mang Đi</option>
+          </select>
+          <div id="address-field">
+            <label for="dia_chi">Địa Chỉ Giao Hàng:</label>
+            <input type="text" name="dia_chi" id="dia_chi" placeholder="Nhập địa chỉ (chỉ giao tại Đà Nẵng)">
+            <label for="so_dien_thoai">Số Điện Thoại:</label>
+            <input type="text" name="so_dien_thoai" id="so_dien_thoai" placeholder="Nhập số điện thoại">
+          </div>
+          <div id="table-field" style="display: none;">
+            <label for="so_ban">Số Bàn:</label>
+            <input type="text" name="so_ban" id="so_ban" placeholder="Nhập số bàn">
+          </div>
+          <div id="pickup-field" style="display: none;">
+            <label for="so_dien_thoai">Số Điện Thoại:</label>
+            <input type="text" name="so_dien_thoai" id="so_dien_thoai" placeholder="Nhập số điện thoại">
+            <label for="thoi_gian_dat">Thời Gian Đến Lấy:</label>
+            <input type="datetime-local" name="thoi_gian_dat" id="thoi_gian_dat">
+          </div>
+
+
+        </div>
+      </form>
+
+      <!-- Modal xác nhận -->
+      <div id="confirmModal" class="modal">
+        <div class="modal-content">
+          <h2>Xác Nhận Đơn Hàng</h2>
+          <div id="orderSummary"></div>
+          <div class="modal-footer">
+            <button class="confirm-btn" onclick="submitOrder()">Xác Nhận</button>
+            <button class="cancel-btn" onclick="closeModal()">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal thông báo thành công -->
+      <div id="successModal" class="success-modal">
+        <div class="success-modal-content">
+          <h2>Đặt Hàng Thành Công!</h2>
+          <p id="successMessage"></p>
+          <button onclick="viewOrderHistory()">Xem Danh Sách Đơn Hàng</button>
+        </div>
+      </div>
+    {% else %}
+      <p class="empty-cart">Giỏ hàng trống.</p>
+      <div class="cart-footer">
+        <div class="action-buttons">
+          <a href="{% url 'myapp:menu_khachhang' %}" class="back-btn">Quay Lại Menu</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    let orderId = null;
+
+    function updateQuantity(maMon, action) {
+      fetch("{% url 'myapp:update_cart' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: `ma_mon=${maMon}&action=${action}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "success") {
+          const item = document.querySelector(`.cart-item[data-ma-mon="${maMon}"]`);
+          item.querySelector(".quantity").textContent = data.so_luong;
+          item.querySelector(".item-price").textContent = `${item.querySelector(".item-price").textContent.split(" x ")[0]} x ${data.so_luong} = ${parseFloat(item.querySelector(".item-price").textContent.split(" x ")[0]) * data.so_luong}đ`;
+          updateTotalPrice();
+        } else if (data.status === "deleted") {
+          document.querySelector(`.cart-item[data-ma-mon="${maMon}"]`).remove();
+          updateTotalPrice();
+          if (!document.querySelector(".cart-item")) {
+            document.querySelector(".main-content").innerHTML = '<p class="empty-cart">Giỏ hàng trống.</p><div class="cart-footer"><div class="action-buttons"><a href="{% url "myapp:menu_khachhang" %}" class="back-btn">Quay Lại Menu</a></div></div>';
+          }
+        } else {
+          alert(data.message || "Có lỗi xảy ra khi cập nhật giỏ hàng.");
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("Có lỗi xảy ra khi cập nhật giỏ hàng. Vui lòng thử lại.");
+      });
+    }
+
+    function toggleOrderFields() {
+      const loaiDonHang = document.getElementById('loai_don_hang').value;
+      const addressField = document.getElementById('address-field');
+      const tableField = document.getElementById('table-field');
+      const pickupField = document.getElementById('pickup-field');
+      addressField.style.display = loaiDonHang === 'truc_tuyen' ? 'block' : 'none';
+      tableField.style.display = loaiDonHang === 'tai_quan' ? 'block' : 'none';
+      pickupField.style.display = loaiDonHang === 'mang_di' ? 'block' : 'none';
+
+      // Ẩn các input không cần thiết để tránh gửi giá trị rỗng
+      document.querySelectorAll('input[name="so_dien_thoai"]').forEach(input => {
+        input.disabled = true;
+      });
+      const activeSoDienThoai = loaiDonHang === 'truc_tuyen' || loaiDonHang === 'mang_di'
+        ? document.querySelector(`#${loaiDonHang === 'truc_tuyen' ? 'address-field' : 'pickup-field'} input[name="so_dien_thoai"]`)
+        : null;
+      if (activeSoDienThoai) {
+        activeSoDienThoai.disabled = false;
+      }
+
+      updateTotalPrice();
+    }
+
+    function updateTotalPrice() {
+      const selectedItems = document.querySelectorAll('input[name="selected_items"]:checked');
+      let total = 0;
+      selectedItems.forEach(item => {
+        const row = item.closest('.cart-item');
+        const price = parseFloat(row.dataset.price);
+        const quantity = parseInt(row.querySelector('.quantity').textContent);
+        total += price * quantity;
+      });
+      document.querySelector(".cart-total span").textContent = `${total}đ`;
+      return total;
+    }
+
+    function showConfirmModal() {
+      const selectedItems = document.querySelectorAll('input[name="selected_items"]:checked');
+      if (selectedItems.length === 0) {
+        alert("Vui lòng chọn ít nhất một món để đặt hàng.");
+        return;
+      }
+
+      const loaiDonHang = document.getElementById('loai_don_hang').value;
+      let total = updateTotalPrice();
+      const phiShip = loaiDonHang === 'truc_tuyen' ? 25000 : 0;
+      const finalTotal = total + phiShip;
+
+      let summary = '<p><strong>Danh Sách Món Đã Chọn:</strong></p>';
+      selectedItems.forEach(item => {
+        const row = item.closest('.cart-item');
+        const name = row.querySelector('.item-name').textContent;
+        const price = parseFloat(row.dataset.price);
+        const quantity = parseInt(row.querySelector('.quantity').textContent);
+        summary += `<p>${name} - ${price}đ x ${quantity} = ${price * quantity}đ</p>`;
+      });
+      summary += `<p><strong>Tổng Tiền Món:</strong> ${total}đ</p>`;
+      summary += `<p><strong>Phí Ship:</strong> ${phiShip}đ</p>`;
+      summary += `<p><strong>Tổng Thanh Toán:</strong> ${finalTotal}đ</p>`;
+      if (loaiDonHang === 'truc_tuyen') {
+        const diaChi = document.getElementById('dia_chi').value;
+        const soDienThoai = document.querySelector('#address-field input[name="so_dien_thoai"]').value;
+        summary += `<p><strong>Địa Chỉ Giao Hàng:</strong> ${diaChi || 'Chưa nhập'}</p>`;
+        summary += `<p><strong>Số Điện Thoại:</strong> ${soDienThoai || 'Chưa nhập'}</p>`;
+      } else if (loaiDonHang === 'tai_quan') {
+        const soBan = document.getElementById('so_ban').value;
+        summary += `<p><strong>Số Bàn:</strong> ${soBan || 'Chưa nhập'}</p>`;
+      } else if (loaiDonHang === 'mang_di') {
+        const soDienThoai = document.querySelector('#pickup-field input[name="so_dien_thoai"]').value;
+        const thoiGianDat = document.getElementById('thoi_gian_dat').value;
+        summary += `<p><strong>Số Điện Thoại:</strong> ${soDienThoai || 'Chưa nhập'}</p>`;
+        summary += `<p><strong>Thời Gian Đến Lấy:</strong> ${thoiGianDat || 'Chưa nhập'}</p>`;
+      }
+
+      document.getElementById('orderSummary').innerHTML = summary;
+      document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('confirmModal').style.display = 'none';
+    }
+
+    function submitOrder() {
+      const loaiDonHang = document.getElementById('loai_don_hang').value;
+
+      // Kiểm tra thời gian hiện tại cho đơn Trực Tuyến và Tại Quán
+      const currentTime = new Date();
+      const hours = currentTime.getHours();
+      const minutes = currentTime.getMinutes();
+      const currentTimeInMinutes = hours * 60 + minutes;
+      const openingTime = 7 * 60 + 30; // 7h30
+      const closingTime = 22 * 60; // 22h
+
+      if (loaiDonHang === 'truc_tuyen' || loaiDonHang === 'tai_quan') {
+        if (currentTimeInMinutes < openingTime || currentTimeInMinutes > closingTime) {
+          alert("Quán chỉ nhận đơn Trực Tuyến và Tại Quán từ 7h30 đến 22h. Vui lòng chọn thời gian khác hoặc chọn loại đơn Mang Đi.");
+          return;
+        }
+      }
+
+      // Kiểm tra các trường bắt buộc
+      if (loaiDonHang === 'truc_tuyen') {
+        const diaChi = document.getElementById('dia_chi').value.trim();
+        const soDienThoai = document.querySelector('#address-field input[name="so_dien_thoai"]').value.trim();
+        if (!diaChi) {
+          alert("Vui lòng nhập địa chỉ giao hàng.");
+          return;
+        }
+        if (!soDienThoai) {
+          alert("Vui lòng nhập số điện thoại.");
+          return;
+        }
+      } else if (loaiDonHang === 'tai_quan') {
+        const soBan = document.getElementById('so_ban').value.trim();
+        if (!soBan) {
+          alert("Vui lòng nhập số bàn.");
+          return;
+        }
+      } else if (loaiDonHang === 'mang_di') {
+        const soDienThoai = document.querySelector('#pickup-field input[name="so_dien_thoai"]').value.trim();
+        const thoiGianDat = document.getElementById('thoi_gian_dat').value;
+        if (!soDienThoai) {
+          alert("Vui lòng nhập số điện thoại.");
+          return;
+        }
+        if (!thoiGianDat) {
+          alert("Vui lòng chọn thời gian đến lấy.");
+          return;
+        }
+        const selectedTime = new Date(thoiGianDat);
+        if (isNaN(selectedTime.getTime())) {
+          alert("Thời gian đến lấy không hợp lệ. Vui lòng chọn lại.");
+          return;
+        }
+        const hours = selectedTime.getHours();
+        const minutes = selectedTime.getMinutes();
+        const timeInMinutes = hours * 60 + minutes;
+        if (timeInMinutes < openingTime || timeInMinutes > closingTime) {
+          alert("Thời gian đến lấy phải từ 7h30 đến 22h.");
+          return;
+        }
+      }
+
+      const form = document.getElementById('cart-form');
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'X-CSRFToken': "{{ csrf_token }}"
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        if (!response.ok) {
+          return response.text().then(text => {
+            try {
+              const data = JSON.parse(text);
+              throw new Error(data.message || `Lỗi từ server (mã ${response.status})`);
+            } catch (e) {
+              throw new Error(`Phản hồi từ server không phải JSON (mã ${response.status}): ${text}`);
+            }
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        if (data.status === 'success') {
+          orderId = data.ma_don_hang;
+          document.getElementById('confirmModal').style.display = 'none';
+          document.getElementById('successMessage').textContent = `Đơn hàng ${orderId} thành công`;
+          document.getElementById('successModal').style.display = 'flex';
+          setTimeout(viewOrderHistory, 2000);
+        } else {
+          alert(data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        alert(error.message || 'Có lỗi xảy ra khi gửi yêu cầu đến server. Vui lòng kiểm tra kết nối và thử lại.');
+      });
+    }
+
+    function viewOrderHistory() {
+      if (orderId) {
+        window.location.href = "{% url 'myapp:order_history' %}";
+      } else {
+        alert("Không tìm thấy mã đơn hàng. Vui lòng thử lại.");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      toggleOrderFields();
+      updateTotalPrice();
+    });
+  </script>
+</body>
+</html>

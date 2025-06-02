@@ -1,0 +1,227 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}The Hideout Cafe{% endblock %}</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: #f7f7f7;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 240px;
+      background: #009944;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: left 0.3s ease;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo img {
+      width: 80px;
+      height: 80px;
+    }
+    .logo-name {
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-grow: 1;
+    }
+    .nav-item {
+      background: #d9d9d9;
+      padding: 10px;
+      border-radius: 20px;
+      text-align: center;
+      color: #383838;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-decoration: none;
+      display: block;
+      position: relative;
+    }
+    .nav-item:hover, .nav-item_active {
+      background: #b4ffab;
+      color: #000;
+    }
+    .nav-item .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4444;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 12px;
+      display: none;
+    }
+    .logout-item {
+      background: #d9d9d9;
+      padding: 8px;
+      border-radius: 15px;
+      text-align: center;
+      color: #383838;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: auto;
+      display: block;
+      text-decoration: none;
+    }
+    .logout-item:hover {
+      background: #b4ffab;
+      color: #000;
+    }
+    .nav-item.logout {
+      font-weight: 700;
+      background: #d9d9d9;
+      color: #dc2626;
+    }
+    .nav-item.logout:hover {
+      background: #b4ffab;
+      color: #b91c1c;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      margin-left: 260px;
+      min-height: calc(100vh - 40px);
+    }
+    h1 {
+      text-align: center;
+      color: #009944;
+      font-size: 28px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    .success {
+      color: #009944;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: #ff4444;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .hamburger {
+      display: none;
+      font-size: 24px;
+      padding: 10px;
+      cursor: pointer;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      color: #009944;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    @media screen and (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .hamburger {
+        display: block;
+      }
+      .sidebar {
+        width: 240px;
+        position: fixed;
+        left: -240px;
+        transition: left 0.3s ease;
+      }
+      .sidebar.active {
+        left: 0;
+      }
+      .main-content {
+        padding: 10px;
+        margin-left: 0;
+      }
+      .chat-container {
+        margin: 8px auto;
+        height: 500px;
+      }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- Nút hamburger -->
+  <div class="hamburger" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar">
+    <div class="logo">
+      <img src="{% static 'images/logo-removebg-preview.png' %}" alt="Logo" />
+      <div class="logo-name">THE HIDEOUT CAFE</div>
+    </div>
+    <div class="nav-menu">
+      <a href="{% url 'myapp:menu_khachhang' %}" class="nav-item {% if request.resolver_match.url_name == 'menu_khachhang' %}nav-item_active{% endif %}">Menu</a>
+      <a href="{% url 'myapp:order_history' %}" class="nav-item {% if request.resolver_match.url_name == 'order_history' %}nav-item_active{% endif %}">Đơn Hàng</a>
+      <a href="{% url 'myapp:book_table' %}" class="nav-item {% if request.resolver_match.url_name == 'book_table' %}nav-item_active{% endif %}">Đặt Bàn</a>
+      <a href="{% url 'myapp:message' %}" class="nav-item {% if request.resolver_match.url_name == 'message' %}nav-item_active{% endif %}">Trò chuyện</a>
+      <a href="{% url 'myapp:public_reviews' %}" class="nav-item {% if request.resolver_match.url_name == 'public_reviews' %}nav-item_active{% endif %}">Đánh Giá</a>
+      <a href="{% url 'myapp:logout' %}" class="nav-item logout {% if request.resolver_match.url_name == 'logout_view' %}nav-item_active{% endif %}">Đăng xuất</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <p {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+      {% endfor %}
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+  </div>
+
+  {% if request.user.is_authenticated %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Toggle sidebar khi nhấn hamburger hoặc ngoài sidebar
+        function toggleSidebar() {
+          document.querySelector('.sidebar').classList.toggle('active');
+        }
+
+        document.querySelector('.hamburger').addEventListener('click', toggleSidebar);
+
+        document.addEventListener('click', function(event) {
+          const sidebar = document.querySelector('.sidebar');
+          const hamburger = document.querySelector('.hamburger');
+          if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+          }
+        });
+      });
+    </script>
+    {% block extra_js %}{% endblock %}
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,41 @@
+{% extends 'base_khach.html' %}
+{% load static %}
+{% block title %}Đánh Giá Đơn Hàng #{{ don_hang.ma_don_hang }} - The Hideout Cafe{% endblock %}
+{% block content %}
+<div class="main-content">
+  <h1>Đánh Giá Đơn Hàng #{{ don_hang.ma_don_hang }}</h1>
+
+
+
+  <div style="background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <form method="post" action="{% url 'myapp:rate_order' don_hang.ma_don_hang %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom: 15px;">
+        <label for="diem_danh_gia" style="display: block; font-weight: 600; margin-bottom: 5px;">Số sao (1-5)</label>
+        <input type="number" id="diem_danh_gia" name="diem_danh_gia" min="1" max="5" style="width: 100%; padding: 10px; border: 1px solid #d9d9d9; border-radius: 10px;" required>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label for="binh_luan" style="display: block; font-weight: 600; margin-bottom: 5px;">Nhận xét</label>
+        <textarea id="binh_luan" name="binh_luan" style="width: 100%; padding: 10px; border: 1px solid #d9d9d9; border-radius: 10px; min-height: 100px;"></textarea>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label for="hinh_anh" style="display: block; font-weight: 600; margin-bottom: 5px;">Hình ảnh</label>
+        <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #d9d9d9; border-radius: 10px;">
+      </div>
+      <button type="submit" style="padding: 10px 20px; background: #009944; color: #fff; border: none; border-radius: 10px; cursor: pointer;">Gửi Đánh Giá</button>
+      <a href="{% url 'myapp:order_history' %}" style="background: #e0e0e0; color: #333; padding: 10px 20px; border-radius: 10px; text-decoration: none; margin-left: 10px;">Quay Lại</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const diem = parseInt(document.getElementById('diem_danh_gia').value);
+    if (diem < 1 || diem > 5) {
+      e.preventDefault();
+      alert('Số sao phải từ 1 đến 5.');
+    }
+  });
+</script>
+{% endblock %}

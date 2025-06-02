@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+  {% load static humanize %}
+
+  {% block title %}The Hideout Cafe - Quản lý bàn{% endblock %}
+
+  {% block extra_css %}
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .btn-add {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #fff;
+      background: #009944;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-add:hover {
+      background: #007a33;
+    }
+    .btn-edit {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #fff;
+      background: #009944; ;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-edit:hover {
+      background: #007a33;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .table-item {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .table-item h3 {
+      color: #374151;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .table-item .status {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .table-item .status.trong {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .table-item .status.co_nguoi {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .table-item p {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 4px 0;
+    }
+    .table-item form {
+      margin-top: 8px;
+    }
+    .table-item select {
+      padding: 6px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 14px;
+      width: 100%;
+      cursor: pointer;
+    }
+    .form-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .form-modal.active {
+      display: flex;
+    }
+    .form-content {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+    .form-content h2 {
+      color: #009944;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .form-content label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .form-content input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .form-content .error {
+      color: #dc2626;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+    .form-content .error.active {
+      display: block;
+    }
+    .btn-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-gray {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #374151;
+      background: #d1d5db;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-gray:hover {
+      background: #b4ffab;
+      color: #000;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .form-content {
+        width: 95%;
+        padding: 16px;
+      }
+    }
+  </style>
+  {% endblock %}
+
+  {% block extra_js %}
+  <script>
+    function openAddForm() {
+      document.getElementById('add-table-form').classList.add('active');
+      document.getElementById('form-title').textContent = 'Thêm Bàn';
+      document.getElementById('table-form').action = "{% url 'myapp:create_table' %}";
+      document.getElementById('so_ban').value = '';
+      document.getElementById('suc_chua').value = '';
+      document.getElementById('ma_ban').value = '';
+    }
+    function openEditForm(maBan, soBan, sucChua) {
+      document.getElementById('add-table-form').classList.add('active');
+      document.getElementById('form-title').textContent = 'Sửa Bàn';
+      document.getElementById('table-form').action = "{% url 'myapp:edit_table' %}";
+      document.getElementById('so_ban').value = soBan;
+      document.getElementById('suc_chua').value = sucChua;
+      document.getElementById('ma_ban').value = maBan;
+    }
+    function closeForm() {
+      document.getElementById('add-table-form').classList.remove('active');
+    }
+    function validateForm() {
+      let isValid = true;
+      const soBan = document.getElementById('so_ban');
+      const sucChua = document.getElementById('suc_chua');
+      const soBanError = document.getElementById('so-ban-error');
+      const sucChuaError = document.getElementById('suc-chua-error');
+
+      soBanError.classList.remove('active');
+      sucChuaError.classList.remove('active');
+
+      if (!soBan.value.trim()) {
+        soBanError.textContent = 'Vui lòng nhập số bàn.';
+        soBanError.classList.add('active');
+        isValid = false;
+      }
+      if (!sucChua.value || sucChua.value <= 0) {
+        sucChuaError.textContent = 'Sức chứa phải lớn hơn 0.';
+        sucChuaError.classList.add('active');
+        isValid = false;
+      }
+      return isValid;
+    }
+  </script>
+  {% endblock %}
+
+  {% block content %}
+  <div class="container">
+    <div class="header-section">
+      <h1 class="text-2xl font-semibold text-gray-900">Quản lý bàn</h1>
+      <button class="btn-add" onclick="openAddForm()">Thêm Bàn</button>
+    </div>
+
+    <!-- Grid view -->
+    <div class="grid">
+      {% for ban in ban_an_list %}
+        <div class="table-item">
+          <h3>{{ ban.so_ban }}</h3>
+          <span class="status {{ ban.trang_thai }}">{{ ban.get_trang_thai_display }}</span>
+          <p><strong>Sức chứa:</strong> {{ ban.suc_chua }} người</p>
+          <form method="POST" action="{% url 'myapp:update_table_status' %}">
+            {% csrf_token %}
+            <input type="hidden" name="ma_ban" value="{{ ban.ma_ban }}">
+            <select name="trang_thai" onchange="this.form.submit()">
+              <option value="trong" {% if ban.trang_thai == 'trong' %}selected{% endif %}>Trống</option>
+              <option value="co_nguoi" {% if ban.trang_thai == 'co_nguoi' %}selected{% endif %}>Có Người</option>
+            </select>
+          </form>
+          <button class="btn-edit" onclick="openEditForm('{{ ban.ma_ban }}', '{{ ban.so_ban }}', '{{ ban.suc_chua }}')">Sửa</button>
+        </div>
+      {% empty %}
+
+        <p>Chưa có bàn nào.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Modal Form Thêm/Sửa Bàn -->
+  <div class="form-modal" id="add-table-form">
+    <div class="form-content">
+      <button class="btn-close" onclick="closeForm()">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 id="form-title">Thêm Bàn</h2>
+      <form id="table-form" method="POST" action="{% url 'myapp:create_table' %}" onsubmit="return validateForm()">
+        {% csrf_token %}
+        <input type="hidden" name="ma_ban" id="ma_ban">
+        <label for="so_ban">Số bàn</label>
+        <input type="text" name="so_ban" id="so_ban" placeholder="VD: Bàn 13" required>
+        <div class="error" id="so-ban-error"></div>
+        <label for="suc_chua">Sức chứa</label>
+        <input type="number" name="suc_chua" id="suc_chua" min="1" placeholder="VD: 4" required>
+        <div class="error" id="suc-chua-error"></div>
+        <div class="flex justify-end gap-4 mt-4">
+          <button type="button" class="btn-gray" onclick="closeForm()">Hủy</button>
+          <button type="submit" class="btn-add">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'base_khach.html' %}
+{% load static %}
+
+
+{% block title %}Lịch Sử Đơn Hàng - The Hideout Cafe{% endblock %}
+
+
+{% block content %}
+<style>
+ .order-table {
+   width: 100%;
+   border-collapse: collapse;
+   margin-bottom: 20px;
+ }
+ .order-table th, .order-table td {
+   padding: 15px;
+   text-align: left;
+   border-bottom: 1px solid #e0e0e0;
+ }
+ .order-table th {
+   background: #f8f8f8;
+   color: #555;
+   font-weight: 600;
+   text-transform: uppercase;
+   font-size: 14px;
+ }
+ .order-table td {
+   vertical-align: middle;
+ }
+ .order-table .order-actions {
+   display: flex;
+   gap: 10px;
+ }
+ .order-table .action-btn {
+   padding: 8px 16px;
+   border: none;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 14px;
+   font-weight: 500;
+   transition: background 0.3s;
+   text-decoration: none;
+   display: inline-flex;
+   align-items: center;
+ }
+ .detail-btn {
+   background: #009944;
+   color: white;
+ }
+ .detail-btn:hover {
+   background: #007b33;
+ }
+ .cancel-btn {
+   background: #ff4444;
+   color: white;
+ }
+ .cancel-btn:hover {
+   background: #cc0000;
+ }
+ .reorder-btn {
+   background: #e0e0e0;
+   color: #333;
+ }
+ .reorder-btn:hover {
+   background: #d0d0d0;
+ }
+ .review-btn {
+   background: #4CAF50;
+   color: white;
+ }
+ .review-btn:hover {
+   background: #388E3C;
+ }
+ .empty-cart {
+   text-align: center;
+   font-size: 16px;
+   color: #555;
+   padding: 20px;
+ }
+ @media screen and (max-width: 768px) {
+   .order-table th, .order-table td { padding: 10px; }
+   .order-table .action-btn { padding: 6px 12px; font-size: 12px; }
+   .order-actions { flex-wrap: wrap; }
+ }
+</style>
+
+
+<h1>Lịch Sử Đơn Hàng</h1>
+{% if don_hang_data %}
+ <table class="order-table">
+   <thead>
+     <tr>
+       <th>Mã Đơn Hàng</th>
+       <th>Loại Đơn Hàng</th>
+       <th>Trạng Thái</th>
+       <th>Thanh Toán</th>
+       <th>Tổng Tiền</th>
+       <th>Ngày Tạo</th>
+       <th>Hành Động</th>
+     </tr>
+   </thead>
+   <tbody>
+     {% for data in don_hang_data %}
+       {% with don_hang=data.don_hang %}
+         <tr>
+           <td>#{{ don_hang.ma_don_hang }}</td>
+           <td>{{ don_hang.get_loai_don_hang_display }}</td>
+           <td>{{ don_hang.get_trang_thai_display }}</td>
+           <td>{{ don_hang.get_thanh_toan_display }}</td>
+           <td>{{ don_hang.tong_tien|floatformat:0 }}đ</td>
+           <td>{{ don_hang.ngay_tao }}</td>
+           <td>
+             <div class="order-actions">
+               {% if don_hang.trang_thai == 'hoan_thanh' %}
+   {% if data.can_review %}
+     <a href="{% url 'myapp:rate_order' don_hang.ma_don_hang %}" class="action-btn review-btn">Đánh Giá</a>
+   {% endif %}
+   <a href="{% url 'myapp:reorder' don_hang.ma_don_hang %}" class="action-btn reorder-btn">Đặt Lại</a>
+ {% elif don_hang.trang_thai == 'da_xac_nhan' %}
+   <a href="{% url 'myapp:cancel_order' don_hang.ma_don_hang %}" class="action-btn cancel-btn">Hủy</a>
+   <a href="{% url 'myapp:order_detail' don_hang.ma_don_hang %}" class="action-btn detail-btn">Xem Chi Tiết</a>
+ {% else %}
+   <a href="{% url 'myapp:order_detail' don_hang.ma_don_hang %}" class="action-btn detail-btn">Xem Chi Tiết</a>
+ {% endif %}
+             </div>
+           </td>
+         </tr>
+       {% endwith %}
+     {% endfor %}
+   </tbody>
+ </table>
+{% else %}
+ <p class="empty-cart">Bạn chưa có đơn hàng nào.</p>
+{% endif %}
+{% endblock %}

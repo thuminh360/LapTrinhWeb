@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}The Hideout Cafe - Quản lý doanh thu{% endblock %}
+
+{% block extra_css %}
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .filter-form {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .filter-form label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-right: 8px;
+  }
+  .filter-form select, .filter-form input[type="date"] {
+    padding: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .filter-form button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #fff;
+    background: #009944;
+    border: none;
+    cursor: pointer;
+  }
+  .filter-form button:hover {
+    background: #007a33;
+  }
+  .summary {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    flex: 1;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .summary-card h3 {
+    font-size: 16px;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  .summary-card p {
+    font-size: 24px;
+    font-weight: 600;
+    color: #009944;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+  }
+  th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+  }
+  @media (max-width: 768px) {
+    .filter-form {
+      flex-direction: column;
+    }
+    .summary {
+      flex-direction: column;
+    }
+    table {
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="header-section">
+    <h1 class="text-2xl font-semibold text-gray-900">Quản lý doanh thu</h1>
+  </div>
+
+  <!-- Form Lọc -->
+  <form class="filter-form" method="GET">
+    <div>
+      <label for="ky_bao_cao">Kỳ báo cáo</label>
+      <select name="ky_bao_cao" id="ky_bao_cao">
+        {% for value, label in ky_bao_cao_choices %}
+          <option value="{{ value }}" {% if ky_bao_cao == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="ngay_bat_dau">Từ ngày</label>
+      <input type="date" name="ngay_bat_dau" id="ngay_bat_dau" value="{{ ngay_bat_dau|date:'Y-m-d' }}">
+    </div>
+    <div>
+      <label for="ngay_ket_thuc">Đến ngày</label>
+      <input type="date" name="ngay_ket_thuc" id="ngay_ket_thuc" value="{{ ngay_ket_thuc|date:'Y-m-d' }}">
+    </div>
+    <button type="submit">Lọc</button>
+  </form>
+
+  <!-- Thẻ Tóm Tắt -->
+  <div class="summary">
+    <div class="summary-card">
+      <h3>Tổng Doanh Thu</h3>
+      <p>{{ total_revenue|intcomma }} VNĐ</p>
+    </div>
+    <div class="summary-card">
+      <h3>Số Đơn Hàng</h3>
+      <p>{{ total_orders }}</p>
+    </div>
+  </div>
+
+  <!-- Bảng Doanh Thu -->
+  <table>
+    <thead>
+      <tr>
+        <th>Kỳ Báo Cáo</th>
+        <th>Doanh Thu</th>
+        <th>Số Đơn Hàng</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in orders_by_period %}
+        <tr>
+          <td>
+            {% if ky_bao_cao == 'hang_ngay' %}
+              {{ item.period|date:"d/m/Y" }}
+            {% elif ky_bao_cao == 'hang_tuan' %}
+              Tuần bắt đầu {{ item.period|date:"d/m/Y" }}
+            {% else %}
+              {{ item.period|date:"m/Y" }}
+            {% endif %}
+          </td>
+          <td>{{ item.total_revenue|intcomma }} VNĐ</td>
+          <td>{{ item.order_count }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="3">Không có dữ liệu doanh thu trong khoảng thời gian này.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

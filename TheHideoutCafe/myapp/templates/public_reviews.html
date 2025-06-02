@@ -1,0 +1,270 @@
+{% extends 'base_khach.html' %}
+{% load static %}
+{% block title %}Đánh Giá Công Khai - The Hideout Cafe{% endblock %}
+{% block content %}
+<style>
+
+  .reviews-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Roboto', sans-serif;
+
+  }
+  .reviews-header h1 {
+    font-size: 32px;
+    color: #009944;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .stats-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+    border: 1px solid #e6e6e6;
+    position: relative;
+    overflow: hidden;
+  }
+  .stats-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #009944, #00b350);
+  }
+  .stats-section h2 {
+    font-size: 24px;
+    color: #009944;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .stats-total {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 25px;
+    font-weight: 700;
+    text-align: center;
+    background: #e6f4e6;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  .rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: slideIn 0.5s ease forwards;
+    animation-delay: calc(0.1s * var(--index));
+  }
+  .rating-label {
+    width: 80px;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rating-label::before {
+    content: '★';
+    color: #ffcc00;
+    font-size: 18px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 16px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #009944, #00b350);
+    border-radius: 8px;
+    transition: width 0.8s ease;
+    width: 0; /* Bắt đầu từ 0 để animation */
+  }
+  .rating-bar.loaded .progress-fill {
+    width: var(--percentage); /* Áp dụng width thực tế khi load */
+  }
+  .rating-info {
+    width: 120px;
+    font-size: 15px;
+    color: #009944;
+    font-weight: 600;
+    text-align: right;
+  }
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+      font-family: 'Roboto', sans-serif;
+
+    gap: 20px;
+  }
+  .review-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  .review-header p {
+    font-size: 16px;
+    color: #383838;
+    font-weight: 600;
+  }
+  .review-header .rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #009944;
+    font-weight: 600;
+  }
+  .review-header .rating::before {
+    content: '★';
+    color: #ffcc00;
+    font-size: 18px;
+  }
+  .review-content p {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .review-content img {
+    max-width: 200px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+  .review-footer {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #777;
+    font-style: italic;
+  }
+  .review-response {
+    background: #f8f8f8;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+    border-left: 4px solid #009944;
+  }
+  .review-response p {
+    font-size: 15px;
+    color: #383838;
+  }
+  .no-reviews {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    padding: 40px 0;
+  }
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @media screen and (max-width: 768px) {
+    .reviews-container { padding: 10px; }
+    .reviews-header h1 { font-size: 28px; }
+    .stats-section { padding: 20px;   font-family: 'Roboto', sans-serif;
+ }
+    .stats-section h2 { font-size: 20px;  }
+    .stats-total { font-size: 18px; padding: 10px; }
+    .rating-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .rating-label, .rating-info { width: auto; text-align: left; font-size: 14px; }
+    .progress-bar { width: 100%; }
+    .review-card { padding: 15px; }
+    .review-header p, .review-header .rating { font-size: 14px; }
+    .review-content p, .review-response p { font-size: 14px; }
+    .review-content img { max-width: 150px; }
+  }
+  @media screen and (max-width: 576px) {
+    .review-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .review-content img { max-width: 100%; }
+  }
+</style>
+
+
+<div class="reviews-container">
+  <div class="reviews-header">
+    <h1>Đánh Giá</h1>
+  </div>
+
+
+  <!-- Thống kê sao -->
+  <div class="stats-section">
+    <h2>Thống Kê Đánh Giá</h2>
+    <p class="stats-total">Tổng số đánh giá: {{ total_reviews }}</p>
+    {% for star, percentage in rating_percentages.items %}
+      <div class="rating-bar" style="--index: {{ forloop.counter0 }}; --percentage: {{ percentage }}%;" onload="this.classList.add('loaded')">
+        <span class="rating-label">{{ star }} sao</span>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <span class="rating-info">{{ percentage }}% ({{ rating_counts.star }} đánh giá)</span>
+      </div>
+    {% endfor %}
+  </div>
+
+
+  <!-- Danh sách đánh giá -->
+  <div class="reviews-list">
+    {% for danh_gia in danh_gia_list %}
+      <div class="review-card">
+        <div class="review-header">
+          <p>Mã Đơn: {{ danh_gia.don_hang.ma_don_hang }}</p>
+          <p class="rating">{{ danh_gia.diem_danh_gia }} sao</p>
+        </div>
+        <div class="review-content">
+          <p><strong>Nhận xét:</strong> {{ danh_gia.binh_luan|default:"Không có" }}</p>
+          {% if danh_gia.hinh_anh %}
+            <img src="{{ danh_gia.hinh_anh.url }}" alt="Hình ảnh đánh giá">
+          {% endif %}
+        </div>
+        <div class="review-footer">
+          <p>Ngày: {{ danh_gia.ngay_tao|date:"d/m/Y H:i" }}</p>
+        </div>
+        {% if danh_gia.phan_hoi %}
+          <div class="review-response">
+            <p><strong>Phản hồi từ quán:</strong> {{ danh_gia.phan_hoi }}</p>
+          </div>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="no-reviews">Chưa có đánh giá nào.</p>
+    {% endfor %}
+  </div>
+</div>
+
+
+<script>
+  // Thêm class 'loaded' để kích hoạt animation thanh ngang
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.rating-bar').forEach(bar => {
+      bar.classList.add('loaded');
+    });
+  });
+</script>
+{% endblock %}
